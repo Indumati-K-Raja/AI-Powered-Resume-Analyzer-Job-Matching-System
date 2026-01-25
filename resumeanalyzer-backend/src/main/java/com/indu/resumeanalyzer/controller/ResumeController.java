@@ -16,6 +16,7 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
+@CrossOrigin(origins = "http://localhost:3001")
 @RestController
 @RequestMapping("/resume")
 public class ResumeController {
