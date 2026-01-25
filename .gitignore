@@ -1,0 +1,16 @@
+# Frontend
+resumeanalyzer-frontend/node_modules
+resumeanalyzer-frontend/.next
+resumeanalyzer-frontend/dist
+resumeanalyzer-frontend/build
+
+# Backend
+resumeanalyzer-backend/target
+resumeanalyzer-backend/.mvn
+resumeanalyzer-backend/*.log
+
+# Common
+.env
+.vscode
+.idea
+.DS_Store
