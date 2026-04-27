@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: resumeanalyzer
+  profiles:
+    active: dev
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 5MB
+      max-request-size: 5MB
+
+server:
+  port: 8080
+
+app:
+  upload:
+    max-size-mb: 5
+    allowed-types: application/pdf
+
+google:
+  gemini:
+    api-key: ${GEMINI_API_KEY:AIzaSyBqTrqq83t6oTZ1D74pss4ulrjRl96J5gQ}
