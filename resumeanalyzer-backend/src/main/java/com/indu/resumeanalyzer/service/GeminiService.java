@@ -2,12 +2,14 @@ package com.indu.resumeanalyzer.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
@@ -15,45 +17,41 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Service
 public class GeminiService {
 
     @Value("${google.gemini.api-key}")
     private String apiKey;
 
-    private final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=";
+    private final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=";
+    
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public Map<String, Object> analyzeResumeWithJD(String resumeText, String jdText) {
+        log.info("Analyzing resume with Live Gemini API...");
+        
         String prompt = "You are an expert ATS (Applicant Tracking System) and technical recruiter. " +
                 "Analyze the following resume against the given job description.\n\n" +
                 "Resume:\n" + resumeText + "\n\n" +
                 "Job Description:\n" + jdText + "\n\n" +
                 "Provide a JSON response strictly with the following format:\n" +
                 "{\n" +
-                "  \"match_score\": 63,\n" +
-                "  \"ats_eval\": \"Partial\",\n" +
-                "  \"recruiter_eval\": \"6/10\",\n" +
-                "  \"shortlist_eval\": \"Moderate\",\n" +
-                "  \"verdict\": \"Apply with tweaks\",\n" +
-                "  \"general_feedback\": \"This is a business + tech hybrid role...\",\n" +
+                "  \"match_score\": 85,\n" +
+                "  \"ats_eval\": \"High\",\n" +
+                "  \"recruiter_eval\": \"9/10\",\n" +
+                "  \"shortlist_eval\": \"Likely\",\n" +
+                "  \"verdict\": \"Strong Candidate\",\n" +
+                "  \"general_feedback\": \"Your profile is a strong match...\",\n" +
                 "  \"exact_fixes\": [\n" +
                 "    {\n" +
-                "      \"title\": \"Summary bullet 3 — replace entirely.\",\n" +
-                "      \"location\": \"Summary, line 3\",\n" +
+                "      \"title\": \"Header Fix\",\n" +
+                "      \"location\": \"Top section\",\n" +
                 "      \"type\": \"replace\",\n" +
-                "      \"originalText\": \"Seeking a software engineering internship...\",\n" +
-                "      \"newText\": \"Experienced in translating business requirements...\",\n" +
-                "      \"keywords\": [\"business requirements\", \"stakeholder collaboration\"]\n" +
-                "    },\n" +
-                "    {\n" +
-                "      \"title\": \"Internship bullet 3 — add stakeholder language.\",\n" +
-                "      \"location\": \"Internship, bullet 3\",\n" +
-                "      \"type\": \"add\",\n" +
-                "      \"originalText\": \"\",\n" +
-                "      \"newText\": \"communicated project progress to stakeholders...\",\n" +
-                "      \"keywords\": [\"stakeholder communication\", \"proactive\"]\n" +
+                "      \"originalText\": \"Software dev\",\n" +
+                "      \"newText\": \"Senior Full Stack Engineer\",\n" +
+                "      \"keywords\": [\"fullstack\", \"react\", \"java\"]\n" +
                 "    }\n" +
                 "  ]\n" +
                 "}";
@@ -62,36 +60,12 @@ public class GeminiService {
     }
 
     public Map<String, Object> analyzeResume(String resumeText) {
-        String prompt = "You are an expert ATS (Applicant Tracking System) and technical recruiter. " +
-                "Analyze the following resume.\n\n" +
-                "Resume:\n" + resumeText + "\n\n" +
-                "Provide a JSON response strictly with the following format:\n" +
-                "{\n" +
-                "  \"match_score\": 80,\n" +
-                "  \"ats_eval\": \"Pass\",\n" +
-                "  \"recruiter_eval\": \"8/10\",\n" +
-                "  \"shortlist_eval\": \"High\",\n" +
-                "  \"verdict\": \"Strong candidate\",\n" +
-                "  \"general_feedback\": \"Your resume is well structured...\",\n" +
-                "  \"exact_fixes\": [\n" +
-                "    {\n" +
-                "      \"title\": \"General - Add more metrics\",\n" +
-                "      \"location\": \"Experience section\",\n" +
-                "      \"type\": \"add\",\n" +
-                "      \"originalText\": \"\",\n" +
-                "      \"newText\": \"Increased performance by 20%\",\n" +
-                "      \"keywords\": [\"metrics\", \"quantifiable\"]\n" +
-                "    }\n" +
-                "  ]\n" +
-                "}";
-
-        return callGeminiAPI(prompt);
+        return analyzeResumeWithJD(resumeText, "General technical roles");
     }
 
     private Map<String, Object> callGeminiAPI(String prompt) {
         try {
             String url = GEMINI_API_URL + apiKey;
-
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
@@ -107,26 +81,25 @@ public class GeminiService {
             requestMap.put("contents", contents);
 
             String requestBody = objectMapper.writeValueAsString(requestMap);
-
             HttpEntity<String> entity = new HttpEntity<>(requestBody, headers);
             ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
 
             JsonNode rootNode = objectMapper.readTree(response.getBody());
             String textResponse = rootNode.path("candidates").get(0).path("content").path("parts").get(0).path("text").asText();
 
-            // Extract JSON from the markdown block if present
-            if (textResponse.startsWith("```json")) {
-                textResponse = textResponse.substring(7, textResponse.length() - 3).trim();
-            } else if (textResponse.startsWith("```")) {
-                textResponse = textResponse.substring(3, textResponse.length() - 3).trim();
+            if (textResponse.contains("```json")) {
+                textResponse = textResponse.split("```json")[1].split("```")[0].trim();
+            } else if (textResponse.contains("```")) {
+                textResponse = textResponse.split("```")[1].split("```")[0].trim();
             }
 
             return objectMapper.readValue(textResponse, Map.class);
+        } catch (HttpClientErrorException e) {
+            log.error("Gemini API Error ({}): {}", e.getStatusCode(), e.getResponseBodyAsString());
+            return Map.of("error", "AI Error: " + e.getResponseBodyAsString());
         } catch (Exception e) {
-            e.printStackTrace();
-            Map<String, Object> errorMap = new HashMap<>();
-            errorMap.put("error", "Failed to analyze with Gemini API: " + e.getMessage());
-            return errorMap;
+            log.error("Critical Gemini Error: ", e);
+            return Map.of("error", "System Error: " + e.getMessage());
         }
     }
 }

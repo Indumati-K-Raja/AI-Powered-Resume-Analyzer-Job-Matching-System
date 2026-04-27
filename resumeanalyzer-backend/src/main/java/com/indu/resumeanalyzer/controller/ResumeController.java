@@ -5,12 +5,14 @@ import com.indu.resumeanalyzer.entity.ResumeAnalysis;
 import com.indu.resumeanalyzer.repository.ResumeAnalysisRepository;
 import com.indu.resumeanalyzer.service.ResumeService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.MediaType;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/resume")
 @RequiredArgsConstructor
@@ -24,21 +26,22 @@ public class ResumeController {
         return ResponseEntity.ok(repository.findAll());
     }
 
-    @PostMapping(value = "/analyze", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ResumeAnalysisResponse> analyzeResume(@ModelAttribute com.indu.resumeanalyzer.dto.ResumeUploadRequest request) {
-        if (request.getFile() == null || request.getFile().isEmpty()) {
-            throw new IllegalArgumentException("File is empty");
-        }
-        ResumeAnalysisResponse response = resumeService.analyzeResume(request.getFile(), null);
+    @PostMapping("/analyze")
+    public ResponseEntity<ResumeAnalysisResponse> analyzeResume(
+            @RequestParam("file") MultipartFile file) {
+        
+        log.info("Analyze request for: {}", file.getOriginalFilename());
+        ResumeAnalysisResponse response = resumeService.analyzeResume(file, null);
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping(value = "/analyzeWithJD", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ResumeAnalysisResponse> analyzeWithJD(@ModelAttribute com.indu.resumeanalyzer.dto.ResumeUploadRequest request) {
-        if (request.getFile() == null || request.getFile().isEmpty()) {
-            throw new IllegalArgumentException("File is empty");
-        }
-        ResumeAnalysisResponse response = resumeService.analyzeResume(request.getFile(), request.getJobDescription());
+    @PostMapping("/analyzeWithJD")
+    public ResponseEntity<ResumeAnalysisResponse> analyzeWithJD(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "jobDescription", required = false) String jobDescription) {
+        
+        log.info("AnalyzeWithJD request for: {}", file.getOriginalFilename());
+        ResumeAnalysisResponse response = resumeService.analyzeResume(file, jobDescription);
         return ResponseEntity.ok(response);
     }
 }

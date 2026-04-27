@@ -1,6 +1,7 @@
 package com.indu.resumeanalyzer.controller;
 
 import com.indu.resumeanalyzer.exception.PDFParsingException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -11,6 +12,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -31,6 +33,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGlobalException(Exception exc) {
+        log.error("Global exception caught: ", exc);
         return buildErrorResponse("An unexpected error occurred: " + exc.getMessage(), "ERR_INTERNAL", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
