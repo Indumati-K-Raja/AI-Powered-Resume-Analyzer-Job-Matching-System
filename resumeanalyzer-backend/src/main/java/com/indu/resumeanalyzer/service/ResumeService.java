@@ -1,5 +1,7 @@
 package com.indu.resumeanalyzer.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.indu.resumeanalyzer.dto.ExactFix;
 import com.indu.resumeanalyzer.dto.ResumeAnalysisResponse;
 import com.indu.resumeanalyzer.entity.ResumeAnalysis;
 import com.indu.resumeanalyzer.repository.ResumeAnalysisRepository;
@@ -23,6 +25,7 @@ public class ResumeService {
     private final PdfTextExtractor textExtractor;
     private final GeminiService geminiService;
     private final ResumeAnalysisRepository repository;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Transactional
     public ResumeAnalysisResponse analyzeResume(MultipartFile file, String jobDescription) {
@@ -43,35 +46,52 @@ public class ResumeService {
             throw new RuntimeException((String) geminiResult.get("error"));
         }
 
-        List<String> resumeSkills = extractListFromMap(geminiResult, hasJd ? "resume_skills" : "skills_found");
-        List<String> missingSkills = hasJd ? extractListFromMap(geminiResult, "missing_skills") : new ArrayList<>();
-        int resumeScore = extractIntFromMap(geminiResult, hasJd ? "resume_score" : "score");
-        int jobFitScore = hasJd ? extractIntFromMap(geminiResult, "job_fit_score") : 0;
+        // Extract metrics
+        int matchScore = extractIntFromMap(geminiResult, "match_score");
+        if (matchScore == 0) matchScore = extractIntFromMap(geminiResult, "resume_score");
         
-        Map<String, String> suggestionsMap = (Map<String, String>) geminiResult.get("suggestions");
-        List<String> suggestions = new ArrayList<>();
-        if (suggestionsMap != null) {
-            suggestions.addAll(suggestionsMap.values());
+        String atsEval = extractStringFromMap(geminiResult, "ats_eval");
+        String recruiterEval = extractStringFromMap(geminiResult, "recruiter_eval");
+        String shortlistEval = extractStringFromMap(geminiResult, "shortlist_eval");
+        String verdict = extractStringFromMap(geminiResult, "verdict");
+        String generalFeedback = extractStringFromMap(geminiResult, "general_feedback");
+
+        List<ExactFix> exactFixes = new ArrayList<>();
+        Object fixesObj = geminiResult.get("exact_fixes");
+        if (fixesObj instanceof List) {
+            List<Map<String, Object>> fixesList = (List<Map<String, Object>>) fixesObj;
+            for (Map<String, Object> fixMap : fixesList) {
+                ExactFix fix = ExactFix.builder()
+                        .title(extractStringFromMap(fixMap, "title"))
+                        .location(extractStringFromMap(fixMap, "location"))
+                        .type(extractStringFromMap(fixMap, "type"))
+                        .originalText(extractStringFromMap(fixMap, "originalText"))
+                        .newText(extractStringFromMap(fixMap, "newText"))
+                        .keywords(extractListFromMap(fixMap, "keywords"))
+                        .build();
+                exactFixes.add(fix);
+            }
         }
 
         ResumeAnalysis analysis = new ResumeAnalysis();
         analysis.setFileName(file.getOriginalFilename());
         analysis.setExtractedText(resumeText);
-        analysis.setDetectedSkills(new HashSet<>(resumeSkills));
-        analysis.setMissingSkills(missingSkills);
-        analysis.setResumeScore(resumeScore);
-        analysis.setJobFitScore(jobFitScore);
+        analysis.setResumeScore(matchScore);
+        analysis.setJobFitScore(hasJd ? matchScore : 0);
         
         repository.save(analysis);
         log.info("Resume analysis saved to database with ID: {}", analysis.getId());
 
         return ResumeAnalysisResponse.builder()
                 .fileName(file.getOriginalFilename())
-                .resumeScore(resumeScore)
-                .jdMatchScore(jobFitScore)
-                .extractedSkills(resumeSkills)
-                .missingSkills(missingSkills)
-                .suggestions(suggestions)
+                .resumeScore(matchScore)
+                .jdMatchScore(hasJd ? matchScore : 0)
+                .atsEval(atsEval != null ? atsEval : "Unknown")
+                .recruiterEval(recruiterEval != null ? recruiterEval : "Unknown")
+                .shortlistEval(shortlistEval != null ? shortlistEval : "Unknown")
+                .verdict(verdict != null ? verdict : "Unknown")
+                .generalFeedback(generalFeedback != null ? generalFeedback : "No feedback provided.")
+                .exactFixes(exactFixes)
                 .build();
     }
 
@@ -93,5 +113,13 @@ public class ResumeService {
             }
         }
         return 0;
+    }
+    
+    private String extractStringFromMap(Map<String, Object> map, String key) {
+        Object obj = map.get(key);
+        if (obj != null) {
+            return String.valueOf(obj);
+        }
+        return null;
     }
 }

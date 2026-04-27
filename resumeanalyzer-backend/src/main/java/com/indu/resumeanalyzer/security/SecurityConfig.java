@@ -21,10 +21,10 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll() // Allow OPTIONS for preflight
-                .requestMatchers("/resume/**", "/h2-console/**", "/api/auth/**").permitAll() // Allow resume endpoints
-                .anyRequest().authenticated()
+                .requestMatchers("/resume/**", "/h2-console/**", "/api/auth/**").permitAll() // Allow all endpoints
+                .anyRequest().permitAll()
             )
-            .headers(headers -> headers.frameOptions().disable()); // Needed for H2 Console
+            .headers(headers -> headers.frameOptions(frame -> frame.disable())); // Needed for H2 Console
 
         return http.build();
     }

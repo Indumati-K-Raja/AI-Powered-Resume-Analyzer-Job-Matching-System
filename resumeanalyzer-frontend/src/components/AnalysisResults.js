@@ -1,15 +1,19 @@
 import React from 'react';
-import { Box, Typography, Chip, LinearProgress, Paper, Divider } from '@mui/material';
+import { Box, Typography, Chip, Paper, Divider } from '@mui/material';
 import { motion } from 'framer-motion';
 
 const AnalysisResults = ({ analysis }) => {
   if (!analysis) return null;
 
-  const skills = analysis.extractedSkills || [];
-  const missingSkills = analysis.missingSkills || [];
-  const resumeScore = analysis.resumeScore !== undefined ? analysis.resumeScore : 0;
-  const jobFitScore = analysis.jdMatchScore;
-  const suggestions = analysis.suggestions || [];
+  const {
+    resumeScore = 0,
+    atsEval = 'Unknown',
+    recruiterEval = 'Unknown',
+    shortlistEval = 'Unknown',
+    verdict = 'Unknown',
+    generalFeedback = '',
+    exactFixes = []
+  } = analysis;
 
   return (
     <motion.div
@@ -17,89 +21,79 @@ const AnalysisResults = ({ analysis }) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <Paper className="glass-panel" sx={{ p: 4, mt: 4, borderRadius: 3 }}>
-        <Typography variant="h5" color="primary" gutterBottom>
-          Analysis Report
-        </Typography>
-        <Divider sx={{ mb: 3 }} />
-
-        {resumeScore !== undefined && (
-          <Box sx={{ mb: 4 }}>
-            <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-              Resume Score
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <LinearProgress 
-                variant="determinate" 
-                value={resumeScore} 
-                sx={{ flexGrow: 1, height: 10, borderRadius: 5, backgroundColor: '#F1D5F1' }} 
-                color={resumeScore >= 70 ? 'success' : resumeScore >= 40 ? 'warning' : 'error'}
-              />
-              <Typography variant="h6" color="primary.main">{resumeScore}%</Typography>
-            </Box>
-          </Box>
-        )}
-
-        {jobFitScore !== undefined && jobFitScore > 0 && (
-          <Box sx={{ mb: 4 }}>
-            <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-              Job Fit Score
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <LinearProgress 
-                variant="determinate" 
-                value={jobFitScore} 
-                sx={{ flexGrow: 1, height: 10, borderRadius: 5, backgroundColor: '#F1D5F1' }} 
-                color={jobFitScore >= 75 ? 'success' : jobFitScore >= 50 ? 'warning' : 'error'}
-              />
-              <Typography variant="h6" color="primary.main">{jobFitScore}%</Typography>
-            </Box>
-          </Box>
-        )}
-
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-            Identified Skills
-          </Typography>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-            {skills.map((skill, index) => (
-              <motion.div key={skill} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: index * 0.05 }}>
-                <Chip label={skill} sx={{ backgroundColor: '#81D0EF', color: '#000', fontWeight: 'bold' }} />
-              </motion.div>
-            ))}
-            {skills.length === 0 && <Typography variant="body2" color="text.secondary">No skills detected.</Typography>}
-          </Box>
+      <Paper sx={{ 
+        p: 4, mt: 4, borderRadius: 2, 
+        backgroundColor: '#1E1E1E', color: '#E0E0E0',
+        fontFamily: "'Inter', sans-serif"
+      }}>
+        
+        {/* Top Badges Row */}
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 3 }}>
+          <Chip label={`Match: ${resumeScore}/100`} sx={{ backgroundColor: '#423B2A', color: '#E2B13B', fontWeight: 'bold' }} />
+          <Chip label={`ATS: ${atsEval}`} sx={{ backgroundColor: '#423B2A', color: '#E2B13B', fontWeight: 'bold' }} />
+          <Chip label={`Recruiter: ${recruiterEval}`} sx={{ backgroundColor: '#423B2A', color: '#E2B13B', fontWeight: 'bold' }} />
+          <Chip label={`Shortlist: ${shortlistEval}`} sx={{ backgroundColor: '#423B2A', color: '#E2B13B', fontWeight: 'bold' }} />
+          <Chip label={verdict} sx={{ backgroundColor: '#423B2A', color: '#E2B13B', fontWeight: 'bold' }} />
         </Box>
 
-        {missingSkills.length > 0 && (
-          <Box sx={{ mb: 4 }}>
-            <Typography variant="subtitle1" fontWeight="bold" color="error.main" gutterBottom>
-              Missing Skills (Based on JD)
+        {/* General Feedback Box */}
+        {generalFeedback && (
+          <Paper sx={{ p: 3, mb: 4, backgroundColor: '#2C2C2C', color: '#CCCCCC', borderRadius: 2, boxShadow: 'none' }}>
+            <Typography variant="body1" sx={{ lineHeight: 1.6 }}>
+              {generalFeedback}
             </Typography>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-              {missingSkills.map((skill, index) => (
-                <motion.div key={skill} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: index * 0.05 }}>
-                  <Chip label={skill} color="error" variant="outlined" />
-                </motion.div>
-              ))}
-            </Box>
-          </Box>
+          </Paper>
         )}
 
-        {suggestions.length > 0 && (
+        {/* Exact Fixes Section */}
+        {exactFixes.length > 0 && (
           <Box>
-            <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-              AI Suggestions & Advice
+            <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#FFFFFF', mb: 2 }}>
+              Exact fixes for this role only
             </Typography>
-            <Paper elevation={0} sx={{ p: 2, backgroundColor: 'rgba(241, 213, 241, 0.3)', borderRadius: 2 }}>
-              <ul style={{ paddingLeft: 20, margin: 0 }}>
-                {suggestions.map((suggestion, index) => (
-                  <li key={index} style={{ marginBottom: 8 }}>
-                    <Typography variant="body2" color="text.secondary">{suggestion}</Typography>
-                  </li>
-                ))}
-              </ul>
-            </Paper>
+
+            {exactFixes.map((fix, index) => (
+              <Box key={index} sx={{ mb: 4 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#FFFFFF', display: 'flex', alignItems: 'center' }}>
+                    {fix.type === 'replace' ? <span style={{color: '#E06C75', marginRight: 8}}>✗</span> : <span style={{color: '#E2B13B', marginRight: 8}}>!</span>}
+                    {fix.title}
+                  </Typography>
+                </Box>
+                
+                {fix.location && (
+                  <Chip size="small" label={fix.location} sx={{ backgroundColor: '#423B2A', color: '#E2B13B', mb: 1.5, borderRadius: 1 }} />
+                )}
+
+                {fix.type === 'replace' && fix.originalText && (
+                  <Box sx={{ 
+                    backgroundColor: '#3E2428', color: '#D47E84', 
+                    p: 1.5, textDecoration: 'line-through', fontFamily: 'monospace', mb: 0.5, borderRadius: 1
+                  }}>
+                    {fix.originalText}
+                  </Box>
+                )}
+
+                {fix.newText && (
+                  <Box sx={{ 
+                    backgroundColor: '#1E3A1E', color: '#8FBC8F', 
+                    p: 1.5, fontFamily: 'monospace', mb: 2, borderRadius: 1
+                  }}>
+                    {fix.type === 'add' ? `After "${fix.originalText}" add: ` : ''}
+                    {fix.newText}
+                  </Box>
+                )}
+
+                {fix.keywords && fix.keywords.length > 0 && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
+                    <Typography variant="body2" sx={{ color: '#AAAAAA', fontWeight: 'bold', mr: 1 }}>Keywords to include:</Typography>
+                    {fix.keywords.map(kw => (
+                      <Chip key={kw} size="small" label={kw} sx={{ backgroundColor: '#21314B', color: '#6A92D4', borderRadius: 1 }} />
+                    ))}
+                  </Box>
+                )}
+              </Box>
+            ))}
           </Box>
         )}
       </Paper>

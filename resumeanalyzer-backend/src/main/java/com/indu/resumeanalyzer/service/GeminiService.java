@@ -32,11 +32,30 @@ public class GeminiService {
                 "Job Description:\n" + jdText + "\n\n" +
                 "Provide a JSON response strictly with the following format:\n" +
                 "{\n" +
-                "  \"resume_skills\": [\"skill1\", \"skill2\"],\n" +
-                "  \"missing_skills\": [\"skill3\", \"skill4\"],\n" +
-                "  \"resume_score\": 85,\n" +
-                "  \"job_fit_score\": 75,\n" +
-                "  \"suggestions\": {\"skill3\": \"suggestion to learn skill3\", \"skill4\": \"suggestion to learn skill4\"}\n" +
+                "  \"match_score\": 63,\n" +
+                "  \"ats_eval\": \"Partial\",\n" +
+                "  \"recruiter_eval\": \"6/10\",\n" +
+                "  \"shortlist_eval\": \"Moderate\",\n" +
+                "  \"verdict\": \"Apply with tweaks\",\n" +
+                "  \"general_feedback\": \"This is a business + tech hybrid role...\",\n" +
+                "  \"exact_fixes\": [\n" +
+                "    {\n" +
+                "      \"title\": \"Summary bullet 3 — replace entirely.\",\n" +
+                "      \"location\": \"Summary, line 3\",\n" +
+                "      \"type\": \"replace\",\n" +
+                "      \"originalText\": \"Seeking a software engineering internship...\",\n" +
+                "      \"newText\": \"Experienced in translating business requirements...\",\n" +
+                "      \"keywords\": [\"business requirements\", \"stakeholder collaboration\"]\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"title\": \"Internship bullet 3 — add stakeholder language.\",\n" +
+                "      \"location\": \"Internship, bullet 3\",\n" +
+                "      \"type\": \"add\",\n" +
+                "      \"originalText\": \"\",\n" +
+                "      \"newText\": \"communicated project progress to stakeholders...\",\n" +
+                "      \"keywords\": [\"stakeholder communication\", \"proactive\"]\n" +
+                "    }\n" +
+                "  ]\n" +
                 "}";
 
         return callGeminiAPI(prompt);
@@ -48,9 +67,22 @@ public class GeminiService {
                 "Resume:\n" + resumeText + "\n\n" +
                 "Provide a JSON response strictly with the following format:\n" +
                 "{\n" +
-                "  \"skills_found\": [\"skill1\", \"skill2\"],\n" +
-                "  \"score\": 80,\n" +
-                "  \"suggestions\": {\"skill1\": \"suggestion to improve skill1 usage\", \"general\": \"general resume tip\"}\n" +
+                "  \"match_score\": 80,\n" +
+                "  \"ats_eval\": \"Pass\",\n" +
+                "  \"recruiter_eval\": \"8/10\",\n" +
+                "  \"shortlist_eval\": \"High\",\n" +
+                "  \"verdict\": \"Strong candidate\",\n" +
+                "  \"general_feedback\": \"Your resume is well structured...\",\n" +
+                "  \"exact_fixes\": [\n" +
+                "    {\n" +
+                "      \"title\": \"General - Add more metrics\",\n" +
+                "      \"location\": \"Experience section\",\n" +
+                "      \"type\": \"add\",\n" +
+                "      \"originalText\": \"\",\n" +
+                "      \"newText\": \"Increased performance by 20%\",\n" +
+                "      \"keywords\": [\"metrics\", \"quantifiable\"]\n" +
+                "    }\n" +
+                "  ]\n" +
                 "}";
 
         return callGeminiAPI(prompt);
@@ -85,6 +117,8 @@ public class GeminiService {
             // Extract JSON from the markdown block if present
             if (textResponse.startsWith("```json")) {
                 textResponse = textResponse.substring(7, textResponse.length() - 3).trim();
+            } else if (textResponse.startsWith("```")) {
+                textResponse = textResponse.substring(3, textResponse.length() - 3).trim();
             }
 
             return objectMapper.readValue(textResponse, Map.class);
