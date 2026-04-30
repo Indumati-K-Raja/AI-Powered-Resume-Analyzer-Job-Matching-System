@@ -1,13 +1,13 @@
 spring:
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/resumeanalyzer}
-    username: ${DATABASE_USERNAME:postgres}
-    password: ${DATABASE_PASSWORD:4213}
+    url: jdbc:postgresql://${PGHOST:localhost}:${PGPORT:5432}/${PGDATABASE:resumeanalyzer}
+    username: ${PGUSER:postgres}
+    password: ${PGPASSWORD:4213}
     driver-class-name: org.postgresql.Driver
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     show-sql: false
   flyway:
     enabled: true
