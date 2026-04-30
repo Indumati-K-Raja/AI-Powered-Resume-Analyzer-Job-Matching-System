@@ -38,13 +38,13 @@ public class GeminiService {
                 "Job Description:\n" + jdText + "\n\n" +
                 "Provide a JSON response strictly with the following format:\n" +
                 "{\n" +
-                "  \"match_score\": 85,\n" +
-                "  \"ats_eval\": \"High\",\n" +
-                "  \"recruiter_eval\": \"9/10\",\n" +
-                "  \"shortlist_eval\": \"Likely\",\n" +
+                "  \"resumeScore\": 85,\n" +
+                "  \"atsEval\": \"Excellent\",\n" +
+                "  \"recruiterEval\": \"9/10\",\n" +
+                "  \"shortlistEval\": \"High\",\n" +
                 "  \"verdict\": \"Strong Candidate\",\n" +
-                "  \"general_feedback\": \"Your profile is a strong match...\",\n" +
-                "  \"exact_fixes\": [\n" +
+                "  \"generalFeedback\": \"Your profile is a strong match...\",\n" +
+                "  \"exactFixes\": [\n" +
                 "    {\n" +
                 "      \"title\": \"Header Fix\",\n" +
                 "      \"location\": \"Top section\",\n" +
@@ -84,6 +84,7 @@ public class GeminiService {
             contentMap.put("parts", parts);
             contents.add(contentMap);
             requestMap.put("contents", contents);
+            requestMap.put("generationConfig", Map.of("response_mime_type", "application/json"));
 
             String requestBody = objectMapper.writeValueAsString(requestMap);
             HttpEntity<String> entity = new HttpEntity<>(requestBody, headers);
@@ -92,6 +93,7 @@ public class GeminiService {
             JsonNode rootNode = objectMapper.readTree(response.getBody());
             String textResponse = rootNode.path("candidates").get(0).path("content").path("parts").get(0).path("text").asText();
 
+            // Handle potential markdown formatting
             if (textResponse.contains("```json")) {
                 textResponse = textResponse.split("```json")[1].split("```")[0].trim();
             } else if (textResponse.contains("```")) {
