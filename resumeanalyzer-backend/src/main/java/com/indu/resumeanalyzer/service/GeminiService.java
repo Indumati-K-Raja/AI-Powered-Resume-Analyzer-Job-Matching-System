@@ -64,6 +64,11 @@ public class GeminiService {
     }
 
     private Map<String, Object> callGeminiAPI(String prompt) {
+        if (apiKey == null || apiKey.isEmpty() || apiKey.contains("${")) {
+            log.error("Gemini API Key is missing or improperly configured! Please set the GEMINI_API_KEY environment variable.");
+            return Map.of("error", "AI Configuration Error: API Key is missing. Please set the GEMINI_API_KEY environment variable.");
+        }
+
         try {
             String url = GEMINI_API_URL + apiKey;
             HttpHeaders headers = new HttpHeaders();

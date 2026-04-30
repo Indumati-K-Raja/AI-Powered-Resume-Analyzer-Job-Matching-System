@@ -19,4 +19,4 @@ app:
 
 google:
   gemini:
-    api-key: AIzaSyCWX4pvbrwxs1mEh-z7D57MxBmOM-Cz3EM
+    api-key: ${GEMINI_API_KEY:}

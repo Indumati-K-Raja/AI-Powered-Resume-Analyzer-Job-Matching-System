@@ -17,6 +17,3 @@ spring:
   flyway:
     enabled: false
 
-google:
-  gemini:
-    api-key: AIzaSyCC8cTC6CZijqoeZer8-rpkum1c6OKSI_Y
