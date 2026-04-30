@@ -10,4 +10,6 @@ FROM eclipse-temurin:17-jre-focal
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
+# Force production profile
+ENV SPRING_PROFILES_ACTIVE=prod
 ENTRYPOINT ["java", "-jar", "app.jar"]
