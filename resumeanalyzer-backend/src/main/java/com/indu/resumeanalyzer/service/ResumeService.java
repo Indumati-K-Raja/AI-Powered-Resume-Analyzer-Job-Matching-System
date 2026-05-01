@@ -13,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -46,18 +45,17 @@ public class ResumeService {
             throw new RuntimeException((String) geminiResult.get("error"));
         }
 
-        // Extract metrics
-        int matchScore = extractIntFromMap(geminiResult, "match_score");
-        if (matchScore == 0) matchScore = extractIntFromMap(geminiResult, "resume_score");
+        // Extract metrics using camelCase keys to match GeminiService prompt
+        int matchScore = extractIntFromMap(geminiResult, "resumeScore");
         
-        String atsEval = extractStringFromMap(geminiResult, "ats_eval");
-        String recruiterEval = extractStringFromMap(geminiResult, "recruiter_eval");
-        String shortlistEval = extractStringFromMap(geminiResult, "shortlist_eval");
+        String atsEval = extractStringFromMap(geminiResult, "atsEval");
+        String recruiterEval = extractStringFromMap(geminiResult, "recruiterEval");
+        String shortlistEval = extractStringFromMap(geminiResult, "shortlistEval");
         String verdict = extractStringFromMap(geminiResult, "verdict");
-        String generalFeedback = extractStringFromMap(geminiResult, "general_feedback");
+        String generalFeedback = extractStringFromMap(geminiResult, "generalFeedback");
 
         List<ExactFix> exactFixes = new ArrayList<>();
-        Object fixesObj = geminiResult.get("exact_fixes");
+        Object fixesObj = geminiResult.get("exactFixes");
         if (fixesObj instanceof List) {
             List<Map<String, Object>> fixesList = (List<Map<String, Object>>) fixesObj;
             for (Map<String, Object> fixMap : fixesList) {
