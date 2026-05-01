@@ -24,20 +24,19 @@ public class GeminiService {
     @Value("${google.gemini.api-key}")
     private String apiKey;
 
-    // Stable v1 endpoint for gemini-1.5-flash
     private final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=";
     
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public Map<String, Object> analyzeResumeWithJD(String resumeText, String jdText) {
-        log.info("Analyzing resume with Live Gemini API v1...");
+        log.info("Analyzing resume with Live Gemini API...");
         
         String prompt = "You are an expert ATS (Applicant Tracking System) and technical recruiter. " +
                 "Analyze the following resume against the given job description.\n\n" +
                 "Resume:\n" + resumeText + "\n\n" +
                 "Job Description:\n" + jdText + "\n\n" +
-                "Provide a JSON response strictly with the following format:\n" +
+                "Provide a JSON response strictly with the following format (No extra text, just JSON):\n" +
                 "{\n" +
                 "  \"resumeScore\": 85,\n" +
                 "  \"atsEval\": \"Excellent\",\n" +
@@ -66,7 +65,7 @@ public class GeminiService {
 
     private Map<String, Object> callGeminiAPI(String prompt) {
         if (apiKey == null || apiKey.isEmpty() || apiKey.contains("${")) {
-            log.error("Gemini API Key is missing! Please set GEMINI_API_KEY.");
+            log.error("Gemini API Key is missing!");
             return Map.of("error", "AI Error: API Key missing.");
         }
 
@@ -85,7 +84,9 @@ public class GeminiService {
             contentMap.put("parts", parts);
             contents.add(contentMap);
             requestMap.put("contents", contents);
-            requestMap.put("generationConfig", Map.of("response_mime_type", "application/json"));
+            
+            // Removed response_mime_type for universal compatibility
+            requestMap.put("generationConfig", new HashMap<>());
 
             String requestBody = objectMapper.writeValueAsString(requestMap);
             HttpEntity<String> entity = new HttpEntity<>(requestBody, headers);
@@ -94,13 +95,15 @@ public class GeminiService {
             JsonNode rootNode = objectMapper.readTree(response.getBody());
             String textResponse = rootNode.path("candidates").get(0).path("content").path("parts").get(0).path("text").asText();
 
-            if (textResponse.contains("```json")) {
-                textResponse = textResponse.split("```json")[1].split("```")[0].trim();
-            } else if (textResponse.contains("```")) {
-                textResponse = textResponse.split("```")[1].split("```")[0].trim();
+            // Handle potential markdown formatting or raw JSON
+            String jsonContent = textResponse;
+            if (jsonContent.contains("```json")) {
+                jsonContent = jsonContent.split("```json")[1].split("```")[0].trim();
+            } else if (jsonContent.contains("```")) {
+                jsonContent = jsonContent.split("```")[1].split("```")[0].trim();
             }
 
-            return objectMapper.readValue(textResponse, Map.class);
+            return objectMapper.readValue(jsonContent, Map.class);
         } catch (HttpClientErrorException e) {
             log.error("Gemini API Error: {}", e.getResponseBodyAsString());
             return Map.of("error", "AI Error: " + e.getResponseBodyAsString());
