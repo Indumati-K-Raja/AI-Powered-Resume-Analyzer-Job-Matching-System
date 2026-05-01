@@ -24,7 +24,8 @@ public class GeminiService {
     @Value("${google.gemini.api-key}")
     private String apiKey;
 
-    private final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=";
+    // Updated to v1 and gemini-1.5-flash for maximum stability
+    private final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=";
     
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
