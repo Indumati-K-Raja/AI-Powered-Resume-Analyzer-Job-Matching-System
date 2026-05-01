@@ -24,14 +24,14 @@ public class GeminiService {
     @Value("${google.gemini.api-key}")
     private String apiKey;
 
-    // Updated to v1 and gemini-1.5-flash for maximum stability
+    // Stable v1 endpoint for gemini-1.5-flash
     private final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=";
     
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public Map<String, Object> analyzeResumeWithJD(String resumeText, String jdText) {
-        log.info("Analyzing resume with Live Gemini API...");
+        log.info("Analyzing resume with Live Gemini API v1...");
         
         String prompt = "You are an expert ATS (Applicant Tracking System) and technical recruiter. " +
                 "Analyze the following resume against the given job description.\n\n" +
@@ -66,8 +66,8 @@ public class GeminiService {
 
     private Map<String, Object> callGeminiAPI(String prompt) {
         if (apiKey == null || apiKey.isEmpty() || apiKey.contains("${")) {
-            log.error("Gemini API Key is missing or improperly configured! Please set the GEMINI_API_KEY environment variable.");
-            return Map.of("error", "AI Configuration Error: API Key is missing. Please set the GEMINI_API_KEY environment variable.");
+            log.error("Gemini API Key is missing! Please set GEMINI_API_KEY.");
+            return Map.of("error", "AI Error: API Key missing.");
         }
 
         try {
@@ -94,7 +94,6 @@ public class GeminiService {
             JsonNode rootNode = objectMapper.readTree(response.getBody());
             String textResponse = rootNode.path("candidates").get(0).path("content").path("parts").get(0).path("text").asText();
 
-            // Handle potential markdown formatting
             if (textResponse.contains("```json")) {
                 textResponse = textResponse.split("```json")[1].split("```")[0].trim();
             } else if (textResponse.contains("```")) {
@@ -103,7 +102,7 @@ public class GeminiService {
 
             return objectMapper.readValue(textResponse, Map.class);
         } catch (HttpClientErrorException e) {
-            log.error("Gemini API Error ({}): {}", e.getStatusCode(), e.getResponseBodyAsString());
+            log.error("Gemini API Error: {}", e.getResponseBodyAsString());
             return Map.of("error", "AI Error: " + e.getResponseBodyAsString());
         } catch (Exception e) {
             log.error("Critical Gemini Error: ", e);
