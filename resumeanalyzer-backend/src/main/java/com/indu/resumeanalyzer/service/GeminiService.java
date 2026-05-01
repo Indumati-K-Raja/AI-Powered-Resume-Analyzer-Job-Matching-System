@@ -24,19 +24,20 @@ public class GeminiService {
     @Value("${google.gemini.api-key}")
     private String apiKey;
 
-    private final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=";
+    // Using v1beta which is widely supported, but without the problematic mime-type setting
+    private final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=";
     
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public Map<String, Object> analyzeResumeWithJD(String resumeText, String jdText) {
-        log.info("Analyzing resume with Live Gemini API...");
+        log.info("Analyzing resume with Gemini API v1beta...");
         
         String prompt = "You are an expert ATS (Applicant Tracking System) and technical recruiter. " +
                 "Analyze the following resume against the given job description.\n\n" +
                 "Resume:\n" + resumeText + "\n\n" +
                 "Job Description:\n" + jdText + "\n\n" +
-                "Provide a JSON response strictly with the following format (No extra text, just JSON):\n" +
+                "Provide a JSON response strictly with the following format:\n" +
                 "{\n" +
                 "  \"resumeScore\": 85,\n" +
                 "  \"atsEval\": \"Excellent\",\n" +
@@ -65,7 +66,6 @@ public class GeminiService {
 
     private Map<String, Object> callGeminiAPI(String prompt) {
         if (apiKey == null || apiKey.isEmpty() || apiKey.contains("${")) {
-            log.error("Gemini API Key is missing!");
             return Map.of("error", "AI Error: API Key missing.");
         }
 
@@ -85,7 +85,7 @@ public class GeminiService {
             contents.add(contentMap);
             requestMap.put("contents", contents);
             
-            // Removed response_mime_type for universal compatibility
+            // Clean generationConfig without response_mime_type to avoid 400 errors
             requestMap.put("generationConfig", new HashMap<>());
 
             String requestBody = objectMapper.writeValueAsString(requestMap);
@@ -95,7 +95,7 @@ public class GeminiService {
             JsonNode rootNode = objectMapper.readTree(response.getBody());
             String textResponse = rootNode.path("candidates").get(0).path("content").path("parts").get(0).path("text").asText();
 
-            // Handle potential markdown formatting or raw JSON
+            // Support both raw JSON and Markdown JSON
             String jsonContent = textResponse;
             if (jsonContent.contains("```json")) {
                 jsonContent = jsonContent.split("```json")[1].split("```")[0].trim();
@@ -105,10 +105,10 @@ public class GeminiService {
 
             return objectMapper.readValue(jsonContent, Map.class);
         } catch (HttpClientErrorException e) {
-            log.error("Gemini API Error: {}", e.getResponseBodyAsString());
+            log.error("Gemini Error: {}", e.getResponseBodyAsString());
             return Map.of("error", "AI Error: " + e.getResponseBodyAsString());
         } catch (Exception e) {
-            log.error("Critical Gemini Error: ", e);
+            log.error("Critical Error: ", e);
             return Map.of("error", "System Error: " + e.getMessage());
         }
     }
