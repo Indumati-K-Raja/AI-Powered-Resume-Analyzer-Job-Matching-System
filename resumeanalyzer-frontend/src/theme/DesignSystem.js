@@ -1,42 +1,38 @@
-import { createTheme } from '@mui/material/styles';
+import { createTheme } from "@mui/material/styles";
 
 export const theme = createTheme({
   palette: {
+    mode: 'dark',
     primary: {
-      main: '#532841', // Deep Purple
-      light: '#A95B6C', // Muted Red
+      main: "#81D0EF",
+      light: "#A5E1F5",
+      dark: "#5FB6D9",
     },
     secondary: {
-      main: '#81D0EF', // Sky Blue
-      light: '#F1D5F1', // Light Lavender
+      main: "#A95B6C",
+      light: "#C17D8B",
+      dark: "#8D3F4F",
     },
     background: {
-      default: '#fafafa',
-      paper: '#ffffff',
+      default: "#0f172a",
+      paper: "#1e293b",
     },
     text: {
-      primary: '#333333',
-      secondary: '#666666',
+      primary: "#f1f5f9",
+      secondary: "#94a3b8",
     },
   },
   typography: {
     fontFamily: "'Inter', sans-serif",
-    h1: {
-      fontWeight: 700,
-      color: '#532841',
-    },
-    h2: {
-      fontWeight: 600,
-      color: '#532841',
-    },
     h3: {
-      fontWeight: 600,
+      fontWeight: 800,
+      letterSpacing: "-0.02em",
     },
-    h4: {
+    h6: {
       fontWeight: 600,
     },
     button: {
-      textTransform: 'none',
+      textTransform: "none",
       fontWeight: 600,
     },
   },
@@ -47,24 +43,23 @@ export const theme = createTheme({
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
-          padding: '10px 24px',
-          boxShadow: 'none',
-          '&:hover': {
-            boxShadow: '0 4px 12px rgba(83, 40, 65, 0.2)',
+          padding: "10px 24px",
+          transition: "all 0.2s ease-in-out",
+          "&:hover": {
+            transform: "translateY(-2px)",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
           },
         },
         containedPrimary: {
-          background: 'linear-gradient(135deg, #532841 0%, #A95B6C 100%)',
+          background: "linear-gradient(135deg, #81D0EF 0%, #5FB6D9 100%)",
+          color: "#0f172a",
         },
       },
     },
-    MuiCard: {
+    MuiPaper: {
       styleOverrides: {
         root: {
-          borderRadius: 16,
-          boxShadow: '0 8px 32px 0 rgba(83, 40, 65, 0.08)',
-          border: '1px solid rgba(241, 213, 241, 0.5)',
+          backgroundImage: "none",
         },
       },
     },
