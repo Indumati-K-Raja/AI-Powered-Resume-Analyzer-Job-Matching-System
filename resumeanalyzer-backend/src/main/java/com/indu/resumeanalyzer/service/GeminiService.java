@@ -24,42 +24,34 @@ public class GeminiService {
     @Value("${google.gemini.api-key}")
     private String apiKey;
 
+    // Using the stable v1 endpoint instead of v1beta to avoid "Not Found" errors
     private final String[] MODELS = {
-        "gemini-1.5-flash-latest",
         "gemini-1.5-flash",
-        "gemini-pro"
+        "gemini-1.5-pro"
     };
 
-    private final String BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/";
+    private final String BASE_URL = "https://generativelanguage.googleapis.com/v1/models/";
     
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public Map<String, Object> analyzeResumeWithJD(String resumeText, String jdText) {
-        log.info("Starting AI Analysis...");
+        log.info("Starting Stable AI Analysis (v1)...");
         
-        String prompt = "You are an expert ATS (Applicant Tracking System) and recruiter.\n" +
-                "Analyze this Resume against the Job Description.\n\n" +
+        String prompt = "Return a JSON object only. Analyze this Resume against the JD.\n\n" +
                 "RESUME:\n" + resumeText + "\n\n" +
-                "JOB DESCRIPTION:\n" + jdText + "\n\n" +
-                "Return ONLY a JSON object with these keys: resumeScore (0-100), atsEval, recruiterEval, shortlistEval, verdict, generalFeedback, exactFixes (array of {title, location, type, originalText, newText, keywords}).";
-
-        String lastError = "No model could process the request.";
+                "JD:\n" + jdText + "\n\n" +
+                "JSON format: {resumeScore, atsEval, recruiterEval, shortlistEval, verdict, generalFeedback, exactFixes:[{title, location, type, originalText, newText, keywords}]}";
 
         for (String model : MODELS) {
             try {
                 return callGeminiAPI(model, prompt);
-            } catch (HttpClientErrorException e) {
-                lastError = "AI Error (" + model + "): " + e.getResponseBodyAsString();
-                log.warn(lastError);
-                if (e.getStatusCode().value() == 401) return Map.of("error", "Invalid API Key. Please check your Gemini settings.");
             } catch (Exception e) {
-                lastError = "System Error (" + model + "): " + e.getMessage();
-                log.error(lastError);
+                log.warn("Model {} failed: {}", model, e.getMessage());
             }
         }
 
-        return Map.of("error", lastError);
+        return Map.of("error", "AI services are temporarily busy. Please wait a moment and try again.");
     }
 
     public Map<String, Object> analyzeResume(String resumeText) {
@@ -67,10 +59,6 @@ public class GeminiService {
     }
 
     private Map<String, Object> callGeminiAPI(String model, String prompt) throws Exception {
-        if (apiKey == null || apiKey.isEmpty() || apiKey.contains("${")) {
-            throw new Exception("API Key Missing");
-        }
-
         String url = BASE_URL + model + ":generateContent?key=" + apiKey;
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -92,20 +80,13 @@ public class GeminiService {
         JsonNode rootNode = objectMapper.readTree(response.getBody());
         String text = rootNode.path("candidates").get(0).path("content").path("parts").get(0).path("text").asText();
 
-        return parseRobustJson(text);
-    }
-
-    private Map<String, Object> parseRobustJson(String text) {
-        try {
-            int start = text.indexOf("{");
-            int end = text.lastIndexOf("}");
-            if (start != -1 && end != -1) {
-                String jsonStr = text.substring(start, end + 1);
-                return objectMapper.readValue(jsonStr, Map.class);
-            }
-            throw new Exception("No JSON found");
-        } catch (Exception e) {
-            return Map.of("error", "AI sent malformed data. Please try again.");
+        // Robust JSON extraction
+        int start = text.indexOf("{");
+        int end = text.lastIndexOf("}");
+        if (start != -1 && end != -1) {
+            String jsonStr = text.substring(start, end + 1);
+            return objectMapper.readValue(jsonStr, Map.class);
         }
+        throw new Exception("Invalid AI Response Format");
     }
 }
