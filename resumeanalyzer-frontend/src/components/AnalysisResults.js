@@ -25,17 +25,16 @@ const AnalysisResults = ({ analysis }) => {
         
         {/* Top Badges Row */}
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 4 }}>
-          <Chip label={`Match: ${resumeScore}/100`} sx={{ backgroundColor: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', fontWeight: 'bold', border: '1px solid rgba(245, 158, 11, 0.3)' }} />
-          <Chip label={`ATS: ${atsEval}`} sx={{ backgroundColor: 'rgba(129, 208, 239, 0.1)', color: '#81D0EF', fontWeight: 'bold', border: '1px solid rgba(129, 208, 239, 0.3)' }} />
-          <Chip label={`Recruiter: ${recruiterEval}`} sx={{ backgroundColor: 'rgba(129, 208, 239, 0.1)', color: '#81D0EF', fontWeight: 'bold', border: '1px solid rgba(129, 208, 239, 0.3)' }} />
-          <Chip label={`Shortlist: ${shortlistEval}`} sx={{ backgroundColor: 'rgba(129, 208, 239, 0.1)', color: '#81D0EF', fontWeight: 'bold', border: '1px solid rgba(129, 208, 239, 0.3)' }} />
-          <Chip label={verdict} sx={{ backgroundColor: 'rgba(169, 91, 108, 0.1)', color: '#A95B6C', fontWeight: 'bold', border: '1px solid rgba(169, 91, 108, 0.3)' }} />
+          <Chip label={`Match: ${resumeScore}/100`} sx={{ backgroundColor: '#fef3c7', color: '#d97706', fontWeight: 'bold' }} />
+          <Chip label={`ATS: ${atsEval}`} sx={{ backgroundColor: '#e0f2fe', color: '#0369a1', fontWeight: 'bold' }} />
+          <Chip label={`Recruiter: ${recruiterEval}`} sx={{ backgroundColor: '#e0f2fe', color: '#0369a1', fontWeight: 'bold' }} />
+          <Chip label={verdict} sx={{ backgroundColor: '#fdf2f2', color: '#991b1b', fontWeight: 'bold' }} />
         </Box>
 
         {/* General Feedback Box */}
         {generalFeedback && (
-          <Box sx={{ p: 3, mb: 4, backgroundColor: 'rgba(255, 255, 255, 0.03)', borderRadius: 2 }}>
-            <Typography variant="body1" sx={{ color: '#cbd5e1', lineHeight: 1.8 }}>
+          <Box sx={{ p: 3, mb: 4, backgroundColor: '#f8fafc', borderRadius: 2, border: '1px solid #e2e8f0' }}>
+            <Typography variant="body1" sx={{ color: '#334155', lineHeight: 1.8 }}>
               {generalFeedback}
             </Typography>
           </Box>
@@ -44,27 +43,27 @@ const AnalysisResults = ({ analysis }) => {
         {/* Exact Fixes Section */}
         {exactFixes.length > 0 && (
           <Box>
-            <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#f1f5f9', mb: 3 }}>
+            <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#1e293b', mb: 3 }}>
               Exact fixes for this role
             </Typography>
 
             {exactFixes.map((fix, index) => (
-              <Box key={index} sx={{ mb: 4, borderLeft: '2px solid rgba(129, 208, 239, 0.2)', pl: 3 }}>
-                <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#f1f5f9', mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-                  {fix.type === 'replace' ? <span style={{color: '#ef4444'}}>✗</span> : <span style={{color: '#f59e0b'}}>!</span>}
+              <Box key={index} sx={{ mb: 4, borderLeft: '3px solid #e2e8f0', pl: 3 }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#1e293b', mb: 1 }}>
+                  {fix.type === 'replace' ? '❌ ' : '⚠️ '}
                   {fix.title}
                 </Typography>
                 
                 {fix.location && (
-                  <Typography variant="caption" sx={{ color: '#94a3b8', display: 'block', mb: 1.5, fontWeight: 600, textTransform: 'uppercase' }}>
-                    Location: {fix.location}
+                  <Typography variant="caption" sx={{ color: '#64748b', display: 'block', mb: 1.5, fontWeight: 700 }}>
+                    LOCATION: {fix.location}
                   </Typography>
                 )}
 
                 {fix.type === 'replace' && fix.originalText && (
                   <Box sx={{ 
-                    backgroundColor: 'rgba(239, 68, 68, 0.05)', color: '#fca5a5', 
-                    p: 1.5, textDecoration: 'line-through', fontFamily: 'monospace', mb: 0.5, borderRadius: 1, border: '1px solid rgba(239, 68, 68, 0.1)'
+                    backgroundColor: '#fff1f2', color: '#e11d48', 
+                    p: 1.5, textDecoration: 'line-through', fontFamily: 'monospace', mb: 1, borderRadius: 1
                   }}>
                     {fix.originalText}
                   </Box>
@@ -72,20 +71,11 @@ const AnalysisResults = ({ analysis }) => {
 
                 {fix.newText && (
                   <Box sx={{ 
-                    backgroundColor: 'rgba(34, 197, 94, 0.05)', color: '#86efac', 
-                    p: 1.5, fontFamily: 'monospace', mb: 2, borderRadius: 1, border: '1px solid rgba(34, 197, 94, 0.1)'
+                    backgroundColor: '#f0fdf4', color: '#166534', 
+                    p: 1.5, fontFamily: 'monospace', mb: 2, borderRadius: 1, fontWeight: 600
                   }}>
-                    {fix.type === 'add' ? 'Add: ' : 'Replace with: '}
+                    {fix.type === 'add' ? 'ADD: ' : 'REPLACE WITH: '}
                     {fix.newText}
-                  </Box>
-                )}
-
-                {fix.keywords && fix.keywords.length > 0 && (
-                  <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
-                    <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 'bold', mr: 1 }}>KEYWORDS:</Typography>
-                    {fix.keywords.map(kw => (
-                      <Chip key={kw} size="small" label={kw} sx={{ backgroundColor: 'rgba(129, 208, 239, 0.05)', color: '#81D0EF', borderRadius: 1, fontSize: '0.7rem' }} />
-                    ))}
                   </Box>
                 )}
               </Box>
