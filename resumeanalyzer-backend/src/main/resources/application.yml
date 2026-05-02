@@ -19,4 +19,4 @@ app:
 
 google:
   gemini:
-    api-key: ${GEMINI_API_KEY:}
+    api-key: ${GEMINI_API_KEY:AIzaSyDPTDRIjRilGM24clWJJ00TfCravSJSo1U} # Added your key as the default
