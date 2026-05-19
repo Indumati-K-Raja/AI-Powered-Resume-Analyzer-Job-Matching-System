@@ -48,14 +48,31 @@ public class ResumeService {
     }
 
     private ResumeAnalysisResponse mapToResponse(Map<String, Object> result, String fileName, String text) {
+        List<Map<String, Object>> rawFixes = (List<Map<String, Object>>) result.get("exactFixes");
+        List<com.indu.resumeanalyzer.dto.ExactFix> mappedFixes = null;
+        
+        if (rawFixes != null) {
+            mappedFixes = rawFixes.stream().map(m -> {
+                com.indu.resumeanalyzer.dto.ExactFix f = new com.indu.resumeanalyzer.dto.ExactFix();
+                f.setTitle(String.valueOf(m.getOrDefault("title", "")));
+                f.setLocation(String.valueOf(m.getOrDefault("location", "")));
+                f.setType(String.valueOf(m.getOrDefault("type", "")));
+                f.setOriginalText(String.valueOf(m.getOrDefault("originalText", "")));
+                f.setNewText(String.valueOf(m.getOrDefault("newText", "")));
+                f.setKeywords((List<String>) m.get("keywords"));
+                return f;
+            }).toList();
+        }
+
         ResumeAnalysisResponse response = ResumeAnalysisResponse.builder()
+                .fileName(fileName)
                 .resumeScore(Double.parseDouble(result.getOrDefault("resumeScore", 0).toString()))
-                .atsEval(result.getOrDefault("atsEval", "N/A").toString())
-                .recruiterEval(result.getOrDefault("recruiterEval", "N/A").toString())
-                .shortlistEval(result.getOrDefault("shortlistEval", "N/A").toString())
-                .verdict(result.getOrDefault("verdict", "N/A").toString())
-                .generalFeedback(result.getOrDefault("generalFeedback", "").toString())
-                .exactFixes((List<Map<String, Object>>) result.get("exactFixes"))
+                .atsEval(String.valueOf(result.getOrDefault("atsEval", "N/A")))
+                .recruiterEval(String.valueOf(result.getOrDefault("recruiterEval", "N/A")))
+                .shortlistEval(String.valueOf(result.getOrDefault("shortlistEval", "N/A")))
+                .verdict(String.valueOf(result.getOrDefault("verdict", "N/A")))
+                .generalFeedback(String.valueOf(result.getOrDefault("generalFeedback", "")))
+                .exactFixes(mappedFixes)
                 .build();
 
         // Optional: Save to DB

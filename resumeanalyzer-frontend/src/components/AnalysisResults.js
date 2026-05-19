@@ -1,6 +1,8 @@
 import React from 'react';
-import { Box, Typography, Chip, Paper, Divider } from '@mui/material';
+import { Box, Typography, Chip, Paper, Divider, Stack } from '@mui/material';
 import { motion } from 'framer-motion';
+import { ScoreBreakdown } from './DetailedScoreBreakdown';
+import { ImprovementSuggestions } from './ImprovementSuggestions';
 
 const AnalysisResults = ({ analysis }) => {
   if (!analysis) return null;
@@ -12,8 +14,21 @@ const AnalysisResults = ({ analysis }) => {
     shortlistEval = 'Unknown',
     verdict = 'Unknown',
     generalFeedback = '',
-    exactFixes = []
-  } = analysis;
+    exactFixes = [],
+    extractedSkills = [],
+    missingSkills = [],
+    suggestions = [],
+    scoreBreakdown = null
+  } = analysis || {};
+
+  const safeFixes = Array.isArray(exactFixes) ? exactFixes : [];
+  const safeSuggestions = Array.isArray(suggestions) ? suggestions : [];
+  
+  // Calculate estimated improvement from suggestions
+  const estimatedImprovement = safeSuggestions.reduce((acc, curr) => {
+    const impact = parseInt(curr.impact?.split(' ')[0] || 0);
+    return acc + impact;
+  }, 0);
 
   return (
     <motion.div
@@ -21,11 +36,11 @@ const AnalysisResults = ({ analysis }) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <Paper className="glass-panel" sx={{ p: 4, mt: 4 }}>
+      <Paper className="glass-panel" sx={{ p: 4, mt: 4, borderRadius: 2 }}>
         
         {/* Top Badges Row */}
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 4 }}>
-          <Chip label={`Match: ${resumeScore}/100`} sx={{ backgroundColor: '#fef3c7', color: '#d97706', fontWeight: 'bold' }} />
+          <Chip label={`Match: ${Math.round(resumeScore)}/100`} sx={{ backgroundColor: '#fef3c7', color: '#d97706', fontWeight: 'bold' }} />
           <Chip label={`ATS: ${atsEval}`} sx={{ backgroundColor: '#e0f2fe', color: '#0369a1', fontWeight: 'bold' }} />
           <Chip label={`Recruiter: ${recruiterEval}`} sx={{ backgroundColor: '#e0f2fe', color: '#0369a1', fontWeight: 'bold' }} />
           <Chip label={verdict} sx={{ backgroundColor: '#fdf2f2', color: '#991b1b', fontWeight: 'bold' }} />
@@ -34,20 +49,62 @@ const AnalysisResults = ({ analysis }) => {
         {/* General Feedback Box */}
         {generalFeedback && (
           <Box sx={{ p: 3, mb: 4, backgroundColor: '#f8fafc', borderRadius: 2, border: '1px solid #e2e8f0' }}>
+            <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>AI Feedback</Typography>
             <Typography variant="body1" sx={{ color: '#334155', lineHeight: 1.8 }}>
               {generalFeedback}
             </Typography>
           </Box>
         )}
 
+        {/* Skills Section */}
+        {(extractedSkills.length > 0 || missingSkills.length > 0) && (
+          <Box sx={{ mb: 4 }}>
+            <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>Skill Analysis</Typography>
+            
+            {extractedSkills.length > 0 && (
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="subtitle2" color="textSecondary" gutterBottom>Detected Skills</Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {extractedSkills.map(skill => (
+                    <Chip key={skill} label={skill} size="small" color="success" variant="outlined" />
+                  ))}
+                </Box>
+              </Box>
+            )}
+
+            {missingSkills.length > 0 && (
+              <Box>
+                <Typography variant="subtitle2" color="textSecondary" gutterBottom>Missing Skills (Critical for JD)</Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {missingSkills.map(skill => (
+                    <Chip key={skill} label={skill} size="small" color="error" variant="outlined" />
+                  ))}
+                </Box>
+              </Box>
+            )}
+          </Box>
+        )}
+
+        {/* Score Breakdown */}
+        {scoreBreakdown && <ScoreBreakdown scoreComponents={scoreBreakdown} />}
+
+        {/* Improvement Suggestions */}
+        {safeSuggestions.length > 0 && (
+          <ImprovementSuggestions 
+            suggestions={safeSuggestions} 
+            estimatedImprovement={estimatedImprovement} 
+          />
+        )}
+
         {/* Exact Fixes Section */}
-        {exactFixes.length > 0 && (
-          <Box>
+        {safeFixes.length > 0 && (
+          <Box sx={{ mt: 4 }}>
+            <Divider sx={{ mb: 4 }} />
             <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#1e293b', mb: 3 }}>
               Exact fixes for this role
             </Typography>
 
-            {exactFixes.map((fix, index) => (
+            {safeFixes.map((fix, index) => (
               <Box key={index} sx={{ mb: 4, borderLeft: '3px solid #e2e8f0', pl: 3 }}>
                 <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#1e293b', mb: 1 }}>
                   {fix.type === 'replace' ? '❌ ' : '⚠️ '}

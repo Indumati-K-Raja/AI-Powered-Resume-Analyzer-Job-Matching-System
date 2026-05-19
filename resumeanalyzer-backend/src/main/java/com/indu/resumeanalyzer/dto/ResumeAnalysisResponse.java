@@ -26,5 +26,7 @@ public class ResumeAnalysisResponse {
     // Legacy fields (optional)
     private List<String> extractedSkills;
     private List<String> missingSkills;
-    private List<String> suggestions;
+    private Object suggestions; // Changed to Object to allow List<Suggestion> or List<String>
+    private Object scoreBreakdown; // New field for detailed scores
+    private String error;
 }

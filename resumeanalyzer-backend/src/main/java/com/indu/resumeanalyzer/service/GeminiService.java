@@ -30,7 +30,7 @@ public class GeminiService {
         "gemini-1.5-pro"
     };
 
-    private final String BASE_URL = "https://generativelanguage.googleapis.com/v1/models/";
+    private final String BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/";
     
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
