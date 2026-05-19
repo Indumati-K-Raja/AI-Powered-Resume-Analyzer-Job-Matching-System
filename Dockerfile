@@ -3,7 +3,7 @@ FROM maven:3.8.4-openjdk-17-slim AS build
 WORKDIR /app
 COPY resumeanalyzer-backend/pom.xml .
 COPY resumeanalyzer-backend/src ./src
-RUN mvn clean package -DskipTests
+RUN --mount=type=cache,target=/root/.m2 mvn clean package -DskipTests
 
 # Run stage
 FROM eclipse-temurin:17-jre-focal
