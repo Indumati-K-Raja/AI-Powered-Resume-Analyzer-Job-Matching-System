@@ -19,4 +19,7 @@ app:
 
 google:
   gemini:
-    api-key: ${GEMINI_API_KEY:AIzaSyDPTDRIjRilGM24clWJJ00TfCravSJSo1U} # Added your key as the default
+    api-key: ${GEMINI_API_KEY}
+
+openrouter:
+  api-key: ${OPENROUTER_API_KEY}
