@@ -23,6 +23,8 @@ const AnalysisResults = ({ analysis }) => {
 
   const safeFixes = Array.isArray(exactFixes) ? exactFixes : [];
   const safeSuggestions = Array.isArray(suggestions) ? suggestions : [];
+  const safeExtractedSkills = Array.isArray(extractedSkills) ? extractedSkills : [];
+  const safeMissingSkills = Array.isArray(missingSkills) ? missingSkills : [];
   
   // Calculate estimated improvement from suggestions
   const estimatedImprovement = safeSuggestions.reduce((acc, curr) => {
@@ -57,26 +59,26 @@ const AnalysisResults = ({ analysis }) => {
         )}
 
         {/* Skills Section */}
-        {(extractedSkills.length > 0 || missingSkills.length > 0) && (
+        {(safeExtractedSkills.length > 0 || safeMissingSkills.length > 0) && (
           <Box sx={{ mb: 4 }}>
             <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>Skill Analysis</Typography>
             
-            {extractedSkills.length > 0 && (
+            {safeExtractedSkills.length > 0 && (
               <Box sx={{ mb: 2 }}>
                 <Typography variant="subtitle2" color="textSecondary" gutterBottom>Detected Skills</Typography>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {extractedSkills.map(skill => (
+                  {safeExtractedSkills.map(skill => (
                     <Chip key={skill} label={skill} size="small" color="success" variant="outlined" />
                   ))}
                 </Box>
               </Box>
             )}
 
-            {missingSkills.length > 0 && (
+            {safeMissingSkills.length > 0 && (
               <Box>
                 <Typography variant="subtitle2" color="textSecondary" gutterBottom>Missing Skills (Critical for JD)</Typography>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {missingSkills.map(skill => (
+                  {safeMissingSkills.map(skill => (
                     <Chip key={skill} label={skill} size="small" color="error" variant="outlined" />
                   ))}
                 </Box>
